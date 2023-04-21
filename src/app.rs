@@ -4,7 +4,13 @@ use crossterm::{
     event::{self, Event, KeyCode},
 };
 
+use tui::{
+    backend::Backend,
+    Terminal
+};
+
 pub struct App {
+    openai_token: String,
     should_exit: bool,
 }
 
@@ -23,14 +29,16 @@ impl App {
         Ok(())
     }
 
-    pub fn new() -> App {
+    pub fn new(openai_token: String) -> App {
         App {
+            openai_token,
             should_exit: false,
         }
     }
 
-    pub fn run(mut self) -> Result<(), Box<dyn Error>> {
+    pub fn run<B: Backend>(mut self, terminal: &mut Terminal<B>) -> Result<(), Box<dyn Error>> {
         loop {
+            terminal.draw(|f| {})?;
             App::on_key(&mut self)?;
 
             if self.should_exit { return Ok(()) }
