@@ -1,3 +1,5 @@
+mod app;
+
 use std::error::Error;
 use std::{fs, io};
 use std::fs::File;
@@ -10,6 +12,10 @@ use crossterm::{
 use tui::{
     backend::CrosstermBackend,
     Terminal,
+};
+
+use crate::{
+    app::App,
 };
 
 fn setup_files() -> Result<(), Box<dyn Error>> {
@@ -31,6 +37,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     execute!(stdout, EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
+
+    let app = App::new();
+    app.run()?;
 
     terminal::disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
