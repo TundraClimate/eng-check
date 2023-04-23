@@ -1,10 +1,13 @@
-use std::error::Error;
-use std::fs::File;
-use std::{io};
-use std::io::{BufReader, ErrorKind};
+use std::{
+    error::Error,
+    fs::File,
+    io::{self, BufReader, ErrorKind},
+};
+
 use reqwest::{Client, Response};
-use serde::Serialize;
-use serde::Deserialize;
+
+use serde::{Serialize, Deserialize};
+
 use serde_json::json;
 
 #[derive(Serialize, Deserialize)]
@@ -14,8 +17,7 @@ struct Token {
 
 pub async fn read_or_request() -> Result<String, Box<dyn Error>> {
     if is_found()? {
-        if is_passed().await? { Ok(token()?.token) }
-        else { Ok(request().await?) }
+        if is_passed().await? { Ok(token()?.token) } else { Ok(request().await?) }
     } else { Ok(request().await?) }
 }
 
