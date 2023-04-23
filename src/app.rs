@@ -22,7 +22,7 @@ impl App {
     fn on_key(&mut self) -> Result<(), Box<dyn Error>> {
         if let Event::Key(e) = event::read()? {
             match e.code {
-                KeyCode::Char('q') => self.exit(),
+                KeyCode::Esc => self.exit(),
                 _ => {}
             }
         }
