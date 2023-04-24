@@ -6,6 +6,8 @@ use reqwest::{Client, Response};
 use serde::{Serialize, Deserialize};
 
 use serde_json::json;
+use tui::backend::Backend;
+use tui::Terminal;
 
 #[derive(Serialize, Deserialize)]
 struct Token {
@@ -17,7 +19,7 @@ struct TokenProcessor {
 }
 
 impl TokenProcessor {
-    fn request(&mut self) -> Result<(), Box<dyn Error>> {
+    fn request<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Result<(), Box<dyn Error>> {
         loop {
             if let Event::Key(k) = read()? {
                 match k.code {
@@ -57,18 +59,18 @@ impl TokenProcessor {
     }
 }
 
-pub async fn read_or_request() -> Result<String, Box<dyn Error>> {
+pub async fn read_or_request<B: Backend>(terminal: &mut Terminal<B>) -> Result<String, Box<dyn Error>> {
     if is_found()? {
-        if is_passed().await? { Ok(token()?.token) } else { Ok(request().await?) }
-    } else { Ok(request().await?) }
+        if is_passed().await? { Ok(token()?.token) } else { Ok(request(terminal).await?) }
+    } else { Ok(request(terminal).await?) }
 }
 
-async fn request() -> Result<String, Box<dyn Error>> {
+async fn request<B: Backend>(terminal: &mut Terminal<B>) -> Result<String, Box<dyn Error>> {
     let mut processor = TokenProcessor { buffer: String::new() };
 
     while !processor.is_passed().await? {
         processor.buffer.drain(..);
-        processor.request()?;
+        processor.request(terminal)?;
     }
     Ok(processor.buffer)
 }

@@ -39,7 +39,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let token = token::read_or_request().await?;
+    let token = token::read_or_request(&mut terminal).await?;
     let app = App::new(token);
     app.run(&mut terminal)?;
 
