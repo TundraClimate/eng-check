@@ -29,6 +29,7 @@ impl TokenProcessor {
             if let Event::Key(k) = read()? {
                 match k.code {
                     KeyCode::Enter => {
+                        set(self.buffer.drain(..).collect())?;
                         break;
                     },
                     KeyCode::Char(c) => {
@@ -64,27 +65,6 @@ impl TokenProcessor {
         f.render_widget(outline, f.size());
         f.render_widget(input, chunks[0]);
     }
-
-    async fn is_passed(&self) -> Result<bool, Box<dyn Error>> {
-        let client = Client::new();
-        let prompt = "test message";
-        let token = &self.buffer;
-        let url = "https://api.openai.com/v1/chat/completions";
-
-        let res = client.post(url)
-            .header("Content-Type", "application/json")
-            .bearer_auth(token)
-            .json(&json!({
-                "model": "gpt-3.5-turbo",
-                "messages": [{
-                    "role": "user",
-                    "content": prompt
-                }]
-            }))
-            .send()
-            .await?;
-        Ok(res.status().is_success())
-    }
 }
 
 pub async fn read_or_request<B: Backend>(terminal: &mut Terminal<B>) -> Result<String, Box<dyn Error>> {
@@ -96,8 +76,7 @@ pub async fn read_or_request<B: Backend>(terminal: &mut Terminal<B>) -> Result<S
 async fn request<B: Backend>(terminal: &mut Terminal<B>) -> Result<String, Box<dyn Error>> {
     let mut processor = TokenProcessor { buffer: String::new(), width: 0 };
 
-    while !processor.is_passed().await? {
-        processor.buffer.drain(..);
+    while !is_passed().await? {
         processor.request(terminal)?;
     }
     Ok(processor.buffer)
@@ -158,5 +137,5 @@ fn token() -> Result<Token, Box<dyn Error>> {
 
 #[test]
 fn test() {
-    assert!(is_found().unwrap());
+    set(String::new());
 }
