@@ -1,4 +1,4 @@
-use std::{error::Error, fs, fs::File, io::{self, Write, BufReader, ErrorKind}};
+use std::{error::Error, fs, fs::File, io::{self, BufReader, ErrorKind}};
 use crossterm::event::{Event, KeyCode, read};
 
 use reqwest::{Client, Response};
@@ -7,7 +7,9 @@ use serde::{Serialize, Deserialize};
 
 use serde_json::json;
 use tui::backend::Backend;
-use tui::Terminal;
+use tui::{Frame, Terminal};
+use tui::layout::{Alignment, Constraint, Direction, Layout};
+use tui::widgets::{Block, Borders, Paragraph};
 
 #[derive(Serialize, Deserialize)]
 struct Token {
@@ -16,14 +18,19 @@ struct Token {
 
 struct TokenProcessor {
     buffer: String,
+    width: u16,
 }
 
 impl TokenProcessor {
     fn request<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Result<(), Box<dyn Error>> {
         loop {
+            self.width = self.buffer.len() as u16;
+            terminal.draw(|f| self.draw(f))?;
             if let Event::Key(k) = read()? {
                 match k.code {
-                    KeyCode::Enter => break,
+                    KeyCode::Enter => {
+                        break;
+                    },
                     KeyCode::Char(c) => {
                         self.buffer.push(c);
                     },
@@ -35,6 +42,27 @@ impl TokenProcessor {
             }
         }
         Ok(())
+    }
+
+    fn draw<B: Backend>(&self, f: &mut Frame<B>) {
+        let outline = Block::default().title("OpenAI token").borders(Borders::ALL);
+        let input_area = Block::default().borders(Borders::ALL);
+        let input = Paragraph::new(self.buffer.as_ref()).block(input_area)
+            .alignment(Alignment::Left);
+        let chunks = Layout::default()
+            .margin(1)
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(3),
+                Constraint::Min(1),
+            ].as_ref())
+            .split(f.size());
+        f.set_cursor(
+            chunks[0].x + self.width + 1,
+            chunks[0].y + 1,
+        );
+        f.render_widget(outline, f.size());
+        f.render_widget(input, chunks[0]);
     }
 
     async fn is_passed(&self) -> Result<bool, Box<dyn Error>> {
@@ -66,7 +94,7 @@ pub async fn read_or_request<B: Backend>(terminal: &mut Terminal<B>) -> Result<S
 }
 
 async fn request<B: Backend>(terminal: &mut Terminal<B>) -> Result<String, Box<dyn Error>> {
-    let mut processor = TokenProcessor { buffer: String::new() };
+    let mut processor = TokenProcessor { buffer: String::new(), width: 0 };
 
     while !processor.is_passed().await? {
         processor.buffer.drain(..);
