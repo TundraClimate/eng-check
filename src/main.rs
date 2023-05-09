@@ -1,5 +1,6 @@
 mod app;
 mod token;
+mod ui;
 
 use std::error::Error;
 use std::{fs, io};
@@ -39,6 +40,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
+    terminal.draw(|f| ui::loading(f, f.size()))?;
     let token = token::read_or_request(&mut terminal).await?;
     let app = App::new(token);
     app.run(&mut terminal)?;
