@@ -68,7 +68,7 @@ impl TokenProcessor {
 }
 
 pub async fn read_or_request<B: Backend>(terminal: &mut Terminal<B>) -> Result<String, Box<dyn Error>> {
-    if is_found()? {
+    if is_found() {
         if is_passed().await? { Ok(token()?.token) } else { Ok(request(terminal).await?) }
     } else { Ok(request(terminal).await?) }
 }
@@ -102,11 +102,11 @@ async fn call_user(prompt: &str) -> Result<Response, Box<dyn Error>> {
     Ok(res)
 }
 
-fn is_found() -> Result<bool, Box<dyn Error>> {
+fn is_found() -> bool {
     if let Some(_) = dirs::config_dir() {
-        if let Ok(Token { token: _ }) = token() { return Ok(true); }
+        if let Ok(Token { token: _ }) = token() { return true; }
     }
-    Ok(false)
+    false
 }
 
 async fn is_passed() -> Result<bool, Box<dyn Error>> {
