@@ -9,6 +9,8 @@ use tui::{
     Terminal
 };
 
+use crate::ui;
+
 pub struct App {
     openai_token: String,
     should_exit: bool,
@@ -38,7 +40,7 @@ impl App {
 
     pub fn run<B: Backend>(mut self, terminal: &mut Terminal<B>) -> Result<(), Box<dyn Error>> {
         loop {
-            terminal.draw(|f| {})?;
+            terminal.draw(|f| ui::main_ui(f, f.size()))?;
             App::on_key(&mut self)?;
 
             if self.should_exit { return Ok(()) }
