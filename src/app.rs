@@ -13,6 +13,7 @@ use crate::ui;
 
 pub struct App {
     openai_token: String,
+    buffer: String,
     should_exit: bool,
 }
 
@@ -25,6 +26,8 @@ impl App {
         if let Event::Key(e) = event::read()? {
             match e.code {
                 KeyCode::Esc => self.exit(),
+                KeyCode::Char(c) => self.buffer.push(c),
+                KeyCode::Backspace => { self.buffer.pop(); },
                 _ => {}
             }
         }
@@ -34,6 +37,7 @@ impl App {
     pub fn new(openai_token: String) -> App {
         App {
             openai_token,
+            buffer: String::new(),
             should_exit: false,
         }
     }
